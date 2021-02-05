@@ -178,3 +178,4 @@ The 95% confidence interval around the means is `r round(myfun[[6]][[1]], 2)` - 
 cat(readLines("dcoomes_hw_04.Rmd"), sep = '\n')
 ```
 
+
