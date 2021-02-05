@@ -1,0 +1,147 @@
+---
+title: "Homework 2"
+author: "David Coomes"
+date: "1/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Starting out by loading libraries.
+
+```{r, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+library(kableExtra)
+library(janitor)
+
+```
+
+
+
+### Question 5.1
+
+Bringing in data. 
+
+```{r}
+
+data <- iris
+
+```
+
+
+Creating one table for each species that includes all variables from the Iris data set. 
+
+```{r}
+
+data %>%
+  filter(Species=="setosa") %>%
+  kable(align="c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F,  position="left")
+
+data %>% 
+  filter(Species=="versicolor")  %>%
+  kable(align="c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F,  position="left")
+
+data %>% 
+  filter(Species=="virginica")  %>%
+  kable(align="c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F,  position="left")
+
+```
+
+<br>
+
+### Question 5.2 
+
+Setting up a table including only spp. *virginica* that lists whether the sepal length and width of that individual is larger than the mean of the sample. 
+
+```{r}
+
+data %>% 
+  filter(Species=="virginica") %>%
+  mutate(width_mean=mean(Sepal.Width),
+         length_mean=mean(Sepal.Length),
+         wider_than_mean = ifelse(Sepal.Width>width_mean, "Yes", "No"),
+         longer_than_mean = ifelse(Sepal.Length>length_mean, "Yes", "No")) %>%
+  select(Sepal.Length, Sepal.Width, wider_than_mean, longer_than_mean) %>%
+  kable(align="c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F, position = "left") 
+
+```
+
+
+<br>
+
+### Question 5.3 
+
+Reading in health data set. 
+
+```{r, warning=FALSE, results='hide'}
+
+data <- readstata13::read.dta13("data/AHwave1_v1.dta")
+DT::datatable(data.frame(colname = names(data), label = attributes(data)$var.labels))
+data$h1gh1 %>% unique()
+
+```
+
+Creating variable that classifies health as: Best (excellent, very good) or Worst (good, fair, poor). 
+
+```{r}
+
+data <- data %>%
+  mutate(health = ifelse((h1gh1=="(1) Excellent" | h1gh1 == "(2) Very good"), "Best", 
+         ifelse((h1gh1 == "(3) Good" | h1gh1 == "(4) Fair" | h1gh1 == "(5) Poor"), "Worst", NA))) 
+
+#checking to make sure it is created correctly
+#table(data$h1gh1, data$health, useNA = "ifany")
+
+```
+
+
+<br>
+
+### Question 5.4
+
+Table of the the count and proportion of sample who had Best (excellent or very good) and Worst (good, fair, or poor) health.
+
+```{r}
+
+tabyl(data$health, sort=TRUE) %>%
+  kable(align = "c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F, position = "left") 
+
+```
+
+
+<br>
+
+### Question 5.5
+
+Table of the the count and proportion of sample who had Best (excellent or very good) and Worst (good, fair, or poor) health by race for white and black respondents.
+
+
+```{r}
+
+data %>%
+  filter(h1gi6a=="(1) Marked") %>%
+  mutate(health_white=health) %>%
+  tabyl(health_white) %>%
+  kable(align = "c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F, position = "left")
+
+data %>%
+  filter(h1gi6b=="(1) Marked") %>%
+  mutate(health_black=health) %>%
+  tabyl(health_black) %>%
+  kable(align = "c") %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=F, position = "left")
+
+
+```
+
+
+
+
+
+
+
+

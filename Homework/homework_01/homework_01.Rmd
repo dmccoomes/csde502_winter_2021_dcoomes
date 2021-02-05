@@ -1,0 +1,190 @@
+---
+title: "homework_01"
+author: "David Coomes"
+date: "1/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r, eval=FALSE}
+
+# make a stupid directory
+stupid_dir <- file.path(Sys.getenv("TEMP"), "delete_me_later")
+
+if(!dir.exists(stupid_dir)){
+    dir.create(path = stupid_dir)
+}
+
+# move into the directory
+setwd(stupid_dir)
+
+# a data frame to write to a file
+x <- data.frame(foo = "bar")
+
+# make some stupidly named files, Dec 16, 2021
+write.csv(x = x, file = file.path(stupid_dir, "file 121621.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 12_16_21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 12-16-21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 16-12-21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file_121621.csv"), quote = FALSE, row.names = FALSE)
+
+# make some stupidly named files, Dec 17, 2021
+write.csv(x = x, file = file.path(stupid_dir, "file 121721.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 12_17_21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 12-17-21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file 17-12-21.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file_121721.csv"), quote = FALSE, row.names = FALSE)
+
+# write two logically named files
+write.csv(x = x, file = file.path(stupid_dir, "file_20211216.csv"), quote = FALSE, row.names = FALSE)
+write.csv(x = x, file = file.path(stupid_dir, "file_20211217.csv"), quote = FALSE, row.names = FALSE)
+
+message("which file is newer?")
+write.csv(list.files(stupid_dir), quote = FALSE, row.names = FALSE)
+message("which file is older?")
+write.csv(sort(list.files(stupid_dir), decreasing = TRUE), quote = FALSE, row.names = FALSE)
+
+message(paste("You should be convinced that yyyymmdd is a better way to name files by date.\nYour reward will be to delete", stupid_dir))
+
+
+```
+
+
+```{r}
+
+file_name <- c("Instrument_v.20 - bilingual.docx"
+,"Master_Durham.csv"
+,"Master_Durham.xlsx"
+,"Durham emails_Nov 30.xlsx"
+,"NJ emails_Nov 30.xlsx"
+,"Durham tasks_Nov 30.xlsx"
+,"Master_Durham_v2.csv"
+,"Master_Durham_v2.xlsx"
+,"NJ emails_December 7.xlsx"
+,"NJ phone numbers_Nov 30.xlsx"
+,"Pitt phone numbers_December 7.xlsx"
+,"Pitt phone numbers_Nov 30.xlsx"
+,"Fraud and quota report_v1.xlsx"
+,"Fraud and quota report_v2.xlsx"
+,"Rutgers_people_to_pay_12_11_2020.xlsx"
+,"Durham emails_Dec 14.xlsx"
+,"Durham phone numbers_Dec 14.xlsx"
+,"Export_1215.7z"
+,"NJ emails_December 14.xlsx"
+,"NJ phone numbers_December 14.xlsx"
+,"VR_Dec1420_Durham.xlsx"
+,"VR_NJ_Dec1420.xlsx"
+,"transfer_0105.zip"
+,"Fraud and quota report_v3.xlsx"
+,"Fraud and quota report_v4.xlsx"
+,"test1.dta")
+
+
+
+
+
+date <- c("2020-10-13",
+          "2020-11-30",
+          "2020-11-30",
+          "2020-12-04",
+          "2020-12-04", "2020-12-07", "2020-12-07",
+"2020-12-07",
+"2020-12-07",
+"2020-12-07",
+"2020-12-07",
+"2020-12-07",
+"2020-12-11",
+"2020-12-11",
+"2020-12-11",
+"2020-12-15",
+"2020-12-15",
+"2020-12-15",
+"2020-12-15",
+"2020-12-15",
+"2020-12-15",
+"2020-12-15",
+"2021-01-05",
+"2021-01-07",
+"2021-01-07",
+"2021-01-08")
+
+
+
+file_name <- c("Instrument_v.20 - bilingual.docx"
+               ,"Master_Durham.csv"
+               ,"Master_Durham.xlsx"
+               ,"Durham emails_Nov 30.xlsx"
+               ,"NJ emails_Nov 30.xlsx"
+               ,"Durham tasks_Nov 30.xlsx"
+               ,"Master_Durham_v2.csv"
+               ,"Master_Durham_v2.xlsx"
+               ,"NJ emails_December 7.xlsx"
+               ,"NJ phone numbers_Nov 30.xlsx"
+               ,"Pitt phone numbers_December 7.xlsx"
+               ,"Pitt phone numbers_Nov 30.xlsx"
+               ,"Fraud and quota report_v1.xlsx"
+               ,"Fraud and quota report_v2.xlsx"
+               ,"Rutgers_people_to_pay_12_11_2020.xlsx"
+               ,"Durham emails_Dec 14.xlsx"
+               ,"Durham phone numbers_Dec 14.xlsx"
+               ,"Export_1215.7z"
+               ,"NJ emails_December 14.xlsx"
+               ,"NJ phone numbers_December 14.xlsx"
+               ,"VR_Dec1420_Durham.xlsx"
+               ,"VR_NJ_Dec1420.xlsx"
+               ,"transfer_0105.zip"
+               ,"Fraud and quota report_v3.xlsx"
+               ,"Fraud and quota report_v4.xlsx"
+               ,"test1.dta")
+
+library(tidyverse)
+table_1 <- tibble(date, file_name)
+
+new_file_name <- c("instrument_bilingual_20201013.docx", "master_durham_20201130.csv", "master_durham_20201130.xlsx", "durham_emails_20201130.xlsx", "nj_emails_20201130.xlsx",
+                   "durham_tasks_20201130.xlsx", "master_durham_20201207.csv", "master_durham_20201207.xlsx", "nj_emails_20201207.xlsx", "nj_phone_numbers_20201130.xlsx", 
+                   "pitt_phone_numbers_20201207.xlsx","pitt_phone_numbers_20201130.xlsx",
+                   "fraud_quota_report_20201211.xlsx", "fraud_quota_report_v2_20201211.xlsx", "rutgers_people_topay_20201211.xlsx", "durham_emails_20201214.xlsx", 
+                   "durham_phone_numbers_20201214.xlsx", "export_20201215.7z", "nj_emails_20201214.xlsx", "nj_phone_numbers_20201214.xlsx", "vr_durham_20201214.xlsx",
+                   "vr_nj_20201214.xlsx", "transfer_20210105.zip", "fraud_quota_report_20210107.xlsx", "fraud_quota_report_v2_20210107.xlsx", "test_20210108.dta")
+
+table_2 <- bind_cols(table_1, new_file_name) %>%
+  rename(new_file_name="...3")
+
+
+
+```
+
+
+```{r, results="asis"}
+
+library(kableExtra)
+kable(table_2) %>% kable_styling(bootstrap_options = c("striped", "condensed"), full_width=TRUE)
+
+
+```
+
+

@@ -1,0 +1,39 @@
+---
+title: "Homework 2"
+author: "David Coomes"
+date: "1/19/2021"
+output: html_document
+---
+
+```{r}
+
+library(tidyverse)
+
+```
+
+
+
+```{r}
+
+as.logical(NA)
+is(as.logical(NA))
+
+as.logical(NULL)
+is(as.logical(NULL))
+str(as.logical(NULL))
+class(as.logical(NULL))
+
+```
+
+```{r}
+
+x <- NA
+is(x)
+str(x)
+class(x)
+
+y <- as.numeric(NA)
+
+
+```
+

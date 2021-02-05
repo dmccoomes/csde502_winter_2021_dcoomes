@@ -1,0 +1,157 @@
+---
+title: "Homework 3"
+author: "[David Coomes](mailto:dcoomes@uw.edu)"
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
+output: bookdown::gitbook
+link-citation: yes
+biblio-style: apalike
+code_folding: hide
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+
+library(tidyverse)
+library(kableExtra)
+library(pander)
+library(ggplot2)
+
+```
+
+
+```{r, include=FALSE}
+
+#Pulling in Add Health data set 
+data <- readstata13::read.dta13("data/AHwave1_v1.dta")
+DT::datatable(data.frame(colname = names(data), label = attributes(data)$var.labels))
+
+
+```
+
+  
+```{r, include=FALSE}
+
+data <- data %>%
+  rename(yob=h1gi1y) %>%
+  mutate(poor_mental_health = ifelse((h1fs6=="(2) A lot of the time" | h1fs6=="(3) Most/all of the time" | 
+                                        h1fs7=="(2) A lot of the time" | h1fs7=="(3) Most/all of the time" | 
+                                        h1fs9=="(2) A lot of the time" | h1fs9=="(3) Most/all of the time" | 
+                                        h1fs19=="(2) A lot of the time" | h1fs19=="(3) Most/all of the time"),
+         "Poor mental health", "Not poor mental health")) %>%
+  mutate(yob=case_when(yob=="(74) 1974"~74,
+                       yob=="(75) 1975"~75,
+                       yob=="(76) 1976"~76,
+                       yob=="(77) 1977"~77,
+                       yob=="(78) 1978"~78,
+                       yob=="(79) 1979"~79,
+                       yob=="(80) 1980"~80,
+                       yob=="(81) 1981"~81,
+                       yob=="(82) 1982"~82,
+                       yob=="(83) 1983"~83,
+                       TRUE ~ as.numeric(NA)))
+
+  
+```
+
+
+# Section 1: Table
+
+Table - poor mental health by race
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+hisp_n <- data %>%
+  filter(h1gi4=="(1) Yes") %>%
+  summarize(n=n()) 
+hisp_prop <- data %>%
+  filter(h1gi4=="(1) Yes") %>%
+  group_by(poor_mental_health) %>%
+  summarize(n=n()) %>%
+  mutate("%"=round(n/sum(n)*100, 2)) 
+hisp_prop <- hisp_prop[2, 3]
+health_hisp <- "Hispanic"
+health_hisp <- cbind(health_hisp, hisp_n, hisp_prop) %>%
+  rename(race=health_hisp)
+
+white_n <- data %>%
+  filter(h1gi6a=="(1) Marked") %>%
+  summarize(n=n()) 
+white_prop <- data %>%
+  filter(h1gi6a=="(1) Marked") %>%
+  group_by(poor_mental_health) %>%
+  summarize(n=n()) %>%
+  mutate("%"=round(n/sum(n)*100, 2)) 
+white_prop <- white_prop[2,3]
+health_white <- "White"
+health_white <- cbind(health_white, white_n, white_prop) %>%
+  rename(race=health_white)
+
+black_n <- data %>%
+  filter(h1gi6b=="(1) Marked") %>%
+  summarize(n=n()) 
+black_prop <- data %>%
+  filter(h1gi6b=="(1) Marked") %>%
+  group_by(poor_mental_health) %>%
+  summarize(n=n()) %>%
+  mutate("%"=round(n/sum(n)*100, 2)) 
+black_prop <- black_prop[2,3]
+health_black <- "African American"
+health_black <- cbind(health_black, black_n, black_prop) %>%
+  rename(race=health_black)
+
+aian_n <- data %>%
+  filter(h1gi6c=="(1) Marked") %>%
+  summarize(n=n()) 
+aian_prop <- data %>%
+  filter(h1gi6c=="(1) Marked") %>%
+  group_by(poor_mental_health) %>%
+  summarize(n=n()) %>%
+  mutate("%"=round(n/sum(n)*100, 2)) 
+aian_prop <- aian_prop[2,3]
+health_aian <- "Native American"
+health_aian <- cbind(health_aian, aian_n, aian_prop) %>%
+  rename(race=health_aian)
+
+asian_n <- data %>%
+  filter(h1gi6d=="(1) Marked (If Asian/Pacific Islander among R's answer ask Q") %>%
+  summarize(n=n()) 
+asian_prop <- data %>%
+  filter(h1gi6d=="(1) Marked (If Asian/Pacific Islander among R's answer ask Q") %>%
+  group_by(poor_mental_health) %>%
+  summarize(n=n()) %>%
+  mutate("%"=round(n/sum(n)*100, 2)) 
+asian_prop <- asian_prop[2,3]
+health_asian <- "Asian"
+health_asian <- cbind(health_asian, asian_n, asian_prop) %>%
+  rename(race=health_asian)
+
+tab_health_all <- rbind(health_hisp, health_white, health_black, health_aian, health_asian)
+
+kable(tab_health_all, col.names = c("Race", "number of respondents", "% reporting poor mental health")) %>%
+  kable_styling(bootstrap_options = 
+                  c("striped", "hover", "condensed", "responsive"),
+                full_width=FALSE,
+                position="left") 
+
+```
+
+# Section 2: Plot
+
+Plot: poor mental health by age
+
+```{r, eval=FALSE}
+
+
+data %>%
+  ggplot(aes(x=yob, y=poor_mental_health, fill=poor_mental_health)) + geom_bar(stat="identity")
+
+data %>%
+  ggplot(aes(x=yob)) + geom_bar(aes(fill=poor_mental_health), y=..prop..)
+
+```
+
