@@ -82,10 +82,8 @@ The mean of the sample is `r gradpain %>% mean`.
 
 fun_1 <- function(d.vec, n) {
   s <- sample(x=d.vec, size=n, replace=TRUE)
-  s_size <- length(s)
-  s_mean <- mean(s)
-  out <- c(s_size, s_mean)
-  return(out)
+  list(vec_length=length(s),
+       vec_mean=mean(s))
 }
 
 ```
@@ -96,7 +94,6 @@ fun_1 <- function(d.vec, n) {
 fun_1(gradpain, length(gradpain))
 x <- fun_1(gradpain, length(gradpain))
 
-x[2]
 
 ```
 
@@ -105,8 +102,8 @@ x[2]
 set.seed(7)
 out <- NULL
 for (i in 1:100){
-  mean <- fun_1(gradpain)
-  out <- c(out, mean[2])
+  mean <- fun_1(d.vec=gradpain, n=length(gradpain))$vec_mean
+  out <- c(out, mean)
 }
 
 mean(out)

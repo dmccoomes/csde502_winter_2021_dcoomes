@@ -11,7 +11,7 @@
 
 <meta name="author" content="David Coomes" />
 
-<meta name="date" content="2021-02-02" />
+<meta name="date" content="2021-02-08" />
 
 <title>Homework 4</title>
 
@@ -278,7 +278,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Homework 4</h1>
 <h4 class="author"><a href="mailto:dcoomes@uw.edu">David Coomes</a></h4>
-<h4 class="date">2021-02-02</h4>
+<h4 class="date">2021-02-08</h4>
 
 </div>
 
@@ -301,20 +301,16 @@ gradpain &lt;- c(rep(0,11), rep(1,1), rep(2,2), rep(3,6), rep(4,8), rep(5,10), r
 <h1>Question 3</h1>
 <pre class="r"><code>fun_1 &lt;- function(d.vec, n) {
   s &lt;- sample(x=d.vec, size=n, replace=TRUE)
-  s_size &lt;- length(s)
-  s_mean &lt;- mean(s)
-  out &lt;- c(s_size, s_mean)
-  return(out)
+  list(vec_length=length(s),
+       vec_mean=mean(s))
 }</code></pre>
 <pre class="r"><code>fun_1(gradpain, length(gradpain))
-x &lt;- fun_1(gradpain, length(gradpain))
-
-x[2]</code></pre>
+x &lt;- fun_1(gradpain, length(gradpain))</code></pre>
 <pre class="r"><code>set.seed(7)
 out &lt;- NULL
 for (i in 1:100){
-  mean &lt;- fun_1(gradpain)
-  out &lt;- c(out, mean[2])
+  mean &lt;- fun_1(d.vec=gradpain, n=length(gradpain))$vec_mean
+  out &lt;- c(out, mean)
 }
 
 mean(out)
@@ -443,10 +439,8 @@ The mean of the sample is `r gradpain %&gt;% mean`.
 
 fun_1 &lt;- function(d.vec, n) {
   s &lt;- sample(x=d.vec, size=n, replace=TRUE)
-  s_size &lt;- length(s)
-  s_mean &lt;- mean(s)
-  out &lt;- c(s_size, s_mean)
-  return(out)
+  list(vec_length=length(s),
+       vec_mean=mean(s))
 }
 
 ```
@@ -456,8 +450,6 @@ fun_1 &lt;- function(d.vec, n) {
 fun_1(gradpain, length(gradpain))
 x &lt;- fun_1(gradpain, length(gradpain))
 
-x[2]
-
 ```
 
 ```{r}
@@ -465,8 +457,8 @@ x[2]
 set.seed(7)
 out &lt;- NULL
 for (i in 1:100){
-  mean &lt;- fun_1(gradpain)
-  out &lt;- c(out, mean[2])
+  mean &lt;- fun_1(d.vec=gradpain, n=length(gradpain))$vec_mean
+  out &lt;- c(out, mean)
 }
 
 mean(out)
