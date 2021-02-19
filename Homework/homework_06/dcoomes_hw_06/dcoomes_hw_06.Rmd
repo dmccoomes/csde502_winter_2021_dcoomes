@@ -1,0 +1,130 @@
+---
+title: "Homework 6"
+author: "David Coomes"
+date: "2/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+library(labelled)
+
+```
+
+
+```{r}
+
+data <- haven::read_dta("data/AHwave1_v1.dta") %>%
+  labelled::foreign_to_labelled()
+
+head(data$imonth)
+
+AHwave1_v1_haven_metadata <- bind_cols(
+    # variable name
+    varname = colnames(data),
+    # label
+    varlabel = lapply(data, function(x) attributes(x)$label) %>% 
+        unlist(),
+    # format
+    varformat = lapply(data, function(x) attributes(x)$format.stata) %>%
+        unlist(),
+    # values
+    varvalues = lapply(data, function(x) attributes(x)$labels) %>% 
+        # names the variable label vector
+        lapply(., function(x) names(x)) %>% 
+        # as character
+        as.character() %>% 
+        # remove the c() construction
+        str_remove_all("^c\\(|\\)$")
+)
+
+DT::datatable(AHwave1_v1_haven_metadata)
+
+```
+
+```{r}
+
+data$iday %>% summary()
+data
+
+```
+
+Creating race variable
+
+```{r}
+
+data <- data %>%
+  mutate(race=case_when(h1gi8==1~1,
+                        h1gi8==2~2, 
+                        h1gi8==3~3,
+                        h1gi8==4~4,
+                        h1gi8==5~5,
+                        h1gi6a==1~1,
+                        h1gi6b==1~2,
+                        h1gi6c==1~3,
+                        h1gi6d==1~4,
+                        h1gi6e==1~5)) %>%
+  mutate(race=case_when(!is.na(race)~race,
+                        is.na(race)~9))
+
+```
+
+Renaming variables
+
+```{r}
+
+data <- data %>%
+  rename(
+    bmonth=h1gi1m,
+    byear=h1gi1y,
+    hispanic=h1gi4,
+    white=h1gi6a,
+    black=h1gi6b,
+    AI=h1gi6c,
+    asian=h1gi6d,
+    raceother=h1gi6e,
+    onerace=h1gi8,
+    observedrace=h1gi9,
+    health=h1gh1
+  )
+
+```
+
+
+
+```{r}
+
+#var_label(data)
+
+var_label(data) <- list(aid="unique case (student) identifier", 
+                        imonth="month interview completed",
+                        iday="day interview completed",
+                        iyear="year interview completed",
+                        bio_sex="interviewer confirmed sex",
+                        bmonth="birth month",
+                        byear="birth year",
+                        hispanic="Hispanic/Latino",
+                        white="race white",
+                        black="race black or African American",
+                        AI="race American Indian or Native American",
+                        asian="race Asian or Pacific Islander",
+                        raceother="race other",
+                        onerace="one category best describes racial background",
+                        observedrace="interviewer observed race",
+                        health="how is your health",
+                        race="race recoded as white; black/African American; American Indian; Asian/Pacific Islander; other; unknown/missing")
+```
+
+
+```{r}
+
+saveRDS(data, "AHwave1_v2.rds")
+
+```
+
