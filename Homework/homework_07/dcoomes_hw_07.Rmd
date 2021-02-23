@@ -1,8 +1,19 @@
 ---
 title: "Homework 7"
-author: "David Coomes"
-date: "2/19/2021"
-output: html_document
+author: "[David Coomes](mailto:dcoomes@uw.edu)"
+date: '`r format(Sys.time(), "%Y-%m-%d")`'
+header-includes: 
+- \usepackage{float} 
+- \floatplacement{figure}{H} 
+output: 
+    bookdown::html_document2: 
+        toc: true
+        toc_float:
+            collapsed: true
+            smooth_scroll: false
+        number_sections: false
+        self_contained: true
+        code_folding: hide
 ---
 
 ```{r setup, include=FALSE}
