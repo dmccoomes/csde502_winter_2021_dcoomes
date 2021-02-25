@@ -16,6 +16,11 @@ output:
         code_folding: hide
 ---
 
+<br>
+<br>
+
+Before we start manipulating the data, we set up our Markdown file and add libraries. Make sure all libraries are already loaded on your computer before running the Markdown file.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
 ```
@@ -24,14 +29,359 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
 ```{r}
 
 library(tidyverse)
+library(magrittr)
+library(kableExtra)
+library(captioner)
+library(ggplot2)
 
 ```
 
-Starting by downloading dataset
+# 1. Generate new dataset
+
+We will create a new dataset that is a subset of the Add Health dataset. First, we start by downloading the full Add Health dataset from github.
+
+```{r, cache=TRUE}
+
+data1 <- haven::read_dta("https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/data/21600-0001-Data.dta")
+data <- data1
+
+```
+
+
+Then, we list the metadata to get an idea of what variables are available. We will select a few variables from the full dataset to develop tables. 
+
+```{r, results='hide'}
+
+metadata <- bind_cols(
+    # variable name
+    varname = colnames(data),
+    # label
+    varlabel = lapply(data, function(x) attributes(x)$label) %>% 
+        unlist(),
+    # format
+    varformat = lapply(data, function(x) attributes(x)$format.stata) %>%
+        unlist(),
+    # values
+    varvalues = lapply(data, function(x) attributes(x)$labels) %>% 
+        # names the variable label vector
+        lapply(., function(x) names(x)) %>% 
+        # as character
+        as.character() %>% 
+        # remove the c() construction
+        str_remove_all("^c\\(|\\)$")
+)
+
+DT::datatable(metadata)
+
+```
+
+
+Next, we keep only the variables we want for the smaller dataset. Here we are keeping biological sex, whether the respondent is part of the highly educated black sub-sample, the language spoken at home, whether the respondent was born in the U.S., the last time the respondent had a physical or dental exam, and whether they know the answer to the true/false question "Most women's periods are regular, that is, tehy ovulate (are fertile) fourteen days after their periods begin."
 
 ```{r}
 
+var_list <- c("bio_sex", "smp03", "h1gi10", "h1gi11", "h1gh24", "h1gh25", "h1kq3a")
 
+data_sub <- data %>%
+  rename(
+    bio_sex=BIO_SEX,
+    smp03=SMP03,
+    h1gi1y=H1GI1Y,
+    h1gi10=H1GI10,
+    h1gi11=H1GI11,
+    h1gh24=H1GH24,
+    h1gh25=H1GH25,
+    h1kq3a=H1KQ3A
+  ) %>%
+  select(var_list)
+
+attributes(data_sub)$label <- "Subset of variables from National Longitudinal Study of Adolescent to Adult Health (Add Health), 1994-200"
+
+```
+
+
+Then we convert all variables to factor variables (ordered when necessary) and include a variable label. Then we save the newly created variables so we are left with a dataset that contains only the factored variables that we are interested in. We save this as an R file in the temp directory so that the factor and the variable labels are kept with the dataset. We can pull in the tempfile for any data manipulation or output in the next steps.
+
+```{r}
+
+# Why doesn't this function work?
+
+# level_func <- function(data, var) {
+#   levels <- data$var %>%
+#   attributes() %>%
+#   extract2("labels") %>%
+#   names()
+#   levels
+# }
+
+#starting with sex
+levels <- data_sub$bio_sex %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$sex <- factor(data_sub$bio_sex,
+                       labels=levels,
+                       ordered=FALSE)
+
+attributes(data_sub$sex)$label <- "Biological sex"
+
+#high education black sample
+levels <- data_sub$smp03 %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$high_educ_black <- factor(data_sub$smp03,
+                       labels=levels,
+                       ordered=FALSE)
+
+attributes(data_sub$high_educ_black)$label <- "High Education Black Sample"
+
+#language spoken at home
+levels <- data_sub$h1gi10 %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$home_lang <- factor(data_sub$h1gi10,
+                       labels=levels,
+                       ordered=FALSE)
+
+attributes(data_sub$high_educ_black)$label <- "Language spoken at home"
+
+#country of birth
+levels <- data_sub$h1gi11 %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$born_us <- factor(data_sub$h1gi11,
+                       labels=levels,
+                       ordered=FALSE) 
+
+data_sub$born_us <- recode(data_sub$born_us, "(7) Legitimate skip (lived at current address since birth)"="(1) Yes",
+                   "(1) Yes (skip to Q.15)"="(1) Yes", 
+                   "(6) Refused (skip to Q.15)"="(6) Refused",
+                   "(8) Don't know (skip to Q.15)"="(8) Don't know")
+
+attributes(data_sub$born_us)$label <- "Born in the U.S.?"
+
+#Last physical exam
+levels <- data_sub$h1gh24 %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$phys_ex <- factor(data_sub$h1gh24,
+                       labels=levels,
+                       ordered=TRUE) 
+
+attributes(data_sub$phys_ex)$label <- "Time since last physical exam"
+
+#Last dental exam
+levels <- data_sub$h1gh25 %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$dent_ex <- factor(data_sub$h1gh25,
+                       labels=levels,
+                       ordered=TRUE) 
+
+attributes(data_sub$dent_ex)$label <- "Time since last dental exam"
+
+#Last dental exam
+levels <- data_sub$h1kq3a %>%
+  attributes() %>%
+  extract2("labels") %>%
+  names()
+
+data_sub$know_ov <- factor(data_sub$h1kq3a,
+                       labels=levels,
+                       ordered=TRUE) 
+
+attributes(data_sub$know_ov)$label <- "Does respondent know the answer to question: Most women's periods are regular"
+
+save_vars <- c("sex", "high_educ_black", "home_lang", "born_us", "phys_ex", "dent_ex", "know_ov")
+data_sub <- data_sub %>% select(save_vars)
+
+# Saving to temporary directory
+#tmpdir <- Sys.getenv("TEMP")    #not working
+tmpdir <- tempdir()
+saveRDS(object=data_sub, file=file.path(tmpdir, "data_sub.RDS"))
+
+
+```
+
+
+# 2. Use new dataset
+
+We start by pulling in the newly created dataset from the tempfile. 
+
+```{r}
+
+data <- readRDS(file=file.path(tmpdir, "data_sub.RDS"))
+
+
+```
+
+
+# 3. Frequency tables
+
+We start by creating a frequency table for each variable in our dataset in order to examine each variable independently. 
+
+```{r sex_table}
+
+#not sure why the code chunk name doesn't work here. My understanding is that it should allow me to reference this table inline with the text, but it won't show the table number here. 
+
+data %>%
+  group_by(sex) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Biological sex") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+```
+
+```{r}
+
+data %>%
+  group_by(high_educ_black) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="From sub-sample of highly educated black families") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+```{r}
+
+data %>%
+  group_by(home_lang) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Language spoken at home") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+```{r}
+
+data %>%
+  group_by(born_us) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Born in the U.S.") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+```{r}
+
+data %>%
+  group_by(phys_ex) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Time since last physical exam") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+```{r}
+
+data %>%
+  group_by(dent_ex) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Time since last dental exam") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+```{r}
+
+data %>%
+  group_by(know_ov) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Knowledge of women's reproductive health") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+
+Next we will look at the frequencies of time since last physical exam and knowledge of women's reproductive health. The question about women's reproductive health is "Most women's periods are regular, that is, they ovulate (are fertile) fourteen days after their periods begin", and the options include true or false. 
+
+We can see no obvious difference between the respondents who are able to answer this question accurately vs. those that are not in the timing of the last physical exam.
+
+```{r}
+
+data %>%
+  filter(know_ov=="(1) True" | know_ov=="(2) False <the correct answer>") %>%
+  group_by(know_ov, phys_ex) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Knowledge of women's reproductive health") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover"))
+
+
+```
+
+
+
+# 4. Graph
+
+Finally, we will graph the differences in time since last dental exam by language spoken in the home. For this we include those that speak English, Spanish, or other as the three different language groups, and four different groups since last dental exam. 
+
+We can see that those who do not speak English in the home report visiting the dentist in the last year less often than those who do speak English.
+
+```{r, fig.cap="Time since last dental exam by language spoken in the home"}
+
+data_plot <- data %>%
+  filter(!str_detect(dent_ex, regex("refused|know|applicable", ignore_case = TRUE))) %>%
+  group_by(home_lang, dent_ex) %>%
+  summarize(n=n(), .groups="drop_last") %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  filter(!str_detect(home_lang, regex("refused|know", ignore_case=TRUE))) 
+
+ggplot(data=data_plot, mapping=aes(x=home_lang, y=`%`, fill=dent_ex)) + 
+  geom_bar(stat="identity") + 
+  coord_flip() +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5, hjust=1)) +
+  xlab("Language spoken in the home") +
+  labs(fill="Time since last dental exam")
+
+```
+
+
+# Code
+
+```{r}
+
+cat(readLines(con="Homework/homework_07/dcoomes_hw_07.Rmd"), sep='\n')
 
 ```
 
