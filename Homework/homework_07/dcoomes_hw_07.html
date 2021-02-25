@@ -1331,7 +1331,7 @@ Figure 1: Time since last dental exam by language spoken in the home
 </div>
 <div id="code" class="section level1">
 <h1>Code</h1>
-<pre class="r"><code>cat(readLines(con=&quot;https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/dcoomes_hw_07.Rmd&quot;), sep='\n')</code></pre>
+<pre class="r"><code>cat(readLines(con=&quot;dcoomes_hw_07.Rmd&quot;), sep='\n')</code></pre>
 <pre><code>## ---
 ## title: &quot;Homework 7&quot;
 ## author: &quot;[David Coomes](mailto:dcoomes@uw.edu)&quot;
@@ -1350,6 +1350,11 @@ Figure 1: Time since last dental exam by language spoken in the home
 ##         code_folding: hide
 ## ---
 ## 
+## &lt;br&gt;
+## &lt;br&gt;
+## 
+## Before we start manipulating the data, we set up our Markdown file and add libraries. Make sure all libraries are already loaded on your computer before running the Markdown file.
+## 
 ## ```{r setup, include=FALSE}
 ## knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
 ## ```
@@ -1358,16 +1363,370 @@ Figure 1: Time since last dental exam by language spoken in the home
 ## ```{r}
 ## 
 ## library(tidyverse)
+## library(magrittr)
+## library(kableExtra)
+## library(captioner)
+## library(ggplot2)
 ## 
 ## ```
 ## 
-## Starting by downloading dataset
+## # 1. Generate new dataset
+## 
+## We will create a new dataset that is a subset of the Add Health dataset. First, we start by downloading the full Add Health dataset from github.
+## 
+## ```{r, cache=TRUE}
+## 
+## data1 &lt;- haven::read_dta(&quot;https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/data/21600-0001-Data.dta&quot;)
+## data &lt;- data1
+## 
+## ```
+## 
+## 
+## Then, we list the metadata to get an idea of what variables are available. We will select a few variables from the full dataset to develop tables. 
+## 
+## ```{r, results='hide'}
+## 
+## metadata &lt;- bind_cols(
+##     # variable name
+##     varname = colnames(data),
+##     # label
+##     varlabel = lapply(data, function(x) attributes(x)$label) %&gt;% 
+##         unlist(),
+##     # format
+##     varformat = lapply(data, function(x) attributes(x)$format.stata) %&gt;%
+##         unlist(),
+##     # values
+##     varvalues = lapply(data, function(x) attributes(x)$labels) %&gt;% 
+##         # names the variable label vector
+##         lapply(., function(x) names(x)) %&gt;% 
+##         # as character
+##         as.character() %&gt;% 
+##         # remove the c() construction
+##         str_remove_all(&quot;^c\\(|\\)$&quot;)
+## )
+## 
+## DT::datatable(metadata)
+## 
+## ```
+## 
+## 
+## Next, we keep only the variables we want for the smaller dataset. Here we are keeping biological sex, whether the respondent is part of the highly educated black sub-sample, the language spoken at home, whether the respondent was born in the U.S., the last time the respondent had a physical or dental exam, and whether they know the answer to the true/false question &quot;Most women's periods are regular, that is, tehy ovulate (are fertile) fourteen days after their periods begin.&quot;
 ## 
 ## ```{r}
 ## 
+## var_list &lt;- c(&quot;bio_sex&quot;, &quot;smp03&quot;, &quot;h1gi10&quot;, &quot;h1gi11&quot;, &quot;h1gh24&quot;, &quot;h1gh25&quot;, &quot;h1kq3a&quot;)
 ## 
+## data_sub &lt;- data %&gt;%
+##   rename(
+##     bio_sex=BIO_SEX,
+##     smp03=SMP03,
+##     h1gi1y=H1GI1Y,
+##     h1gi10=H1GI10,
+##     h1gi11=H1GI11,
+##     h1gh24=H1GH24,
+##     h1gh25=H1GH25,
+##     h1kq3a=H1KQ3A
+##   ) %&gt;%
+##   select(var_list)
+## 
+## attributes(data_sub)$label &lt;- &quot;Subset of variables from National Longitudinal Study of Adolescent to Adult Health (Add Health), 1994-200&quot;
+## 
+## ```
+## 
+## 
+## Then we convert all variables to factor variables (ordered when necessary) and include a variable label. Then we save the newly created variables so we are left with a dataset that contains only the factored variables that we are interested in. We save this as an R file in the temp directory so that the factor and the variable labels are kept with the dataset. We can pull in the tempfile for any data manipulation or output in the next steps.
+## 
+## ```{r}
+## 
+## # Why doesn't this function work?
+## 
+## # level_func &lt;- function(data, var) {
+## #   levels &lt;- data$var %&gt;%
+## #   attributes() %&gt;%
+## #   extract2(&quot;labels&quot;) %&gt;%
+## #   names()
+## #   levels
+## # }
+## 
+## #starting with sex
+## levels &lt;- data_sub$bio_sex %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$sex &lt;- factor(data_sub$bio_sex,
+##                        labels=levels,
+##                        ordered=FALSE)
+## 
+## attributes(data_sub$sex)$label &lt;- &quot;Biological sex&quot;
+## 
+## #high education black sample
+## levels &lt;- data_sub$smp03 %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$high_educ_black &lt;- factor(data_sub$smp03,
+##                        labels=levels,
+##                        ordered=FALSE)
+## 
+## attributes(data_sub$high_educ_black)$label &lt;- &quot;High Education Black Sample&quot;
+## 
+## #language spoken at home
+## levels &lt;- data_sub$h1gi10 %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$home_lang &lt;- factor(data_sub$h1gi10,
+##                        labels=levels,
+##                        ordered=FALSE)
+## 
+## attributes(data_sub$high_educ_black)$label &lt;- &quot;Language spoken at home&quot;
+## 
+## #country of birth
+## levels &lt;- data_sub$h1gi11 %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$born_us &lt;- factor(data_sub$h1gi11,
+##                        labels=levels,
+##                        ordered=FALSE) 
+## 
+## data_sub$born_us &lt;- recode(data_sub$born_us, &quot;(7) Legitimate skip (lived at current address since birth)&quot;=&quot;(1) Yes&quot;,
+##                    &quot;(1) Yes (skip to Q.15)&quot;=&quot;(1) Yes&quot;, 
+##                    &quot;(6) Refused (skip to Q.15)&quot;=&quot;(6) Refused&quot;,
+##                    &quot;(8) Don't know (skip to Q.15)&quot;=&quot;(8) Don't know&quot;)
+## 
+## attributes(data_sub$born_us)$label &lt;- &quot;Born in the U.S.?&quot;
+## 
+## #Last physical exam
+## levels &lt;- data_sub$h1gh24 %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$phys_ex &lt;- factor(data_sub$h1gh24,
+##                        labels=levels,
+##                        ordered=TRUE) 
+## 
+## attributes(data_sub$phys_ex)$label &lt;- &quot;Time since last physical exam&quot;
+## 
+## #Last dental exam
+## levels &lt;- data_sub$h1gh25 %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$dent_ex &lt;- factor(data_sub$h1gh25,
+##                        labels=levels,
+##                        ordered=TRUE) 
+## 
+## attributes(data_sub$dent_ex)$label &lt;- &quot;Time since last dental exam&quot;
+## 
+## #Last dental exam
+## levels &lt;- data_sub$h1kq3a %&gt;%
+##   attributes() %&gt;%
+##   extract2(&quot;labels&quot;) %&gt;%
+##   names()
+## 
+## data_sub$know_ov &lt;- factor(data_sub$h1kq3a,
+##                        labels=levels,
+##                        ordered=TRUE) 
+## 
+## attributes(data_sub$know_ov)$label &lt;- &quot;Does respondent know the answer to question: Most women's periods are regular&quot;
+## 
+## save_vars &lt;- c(&quot;sex&quot;, &quot;high_educ_black&quot;, &quot;home_lang&quot;, &quot;born_us&quot;, &quot;phys_ex&quot;, &quot;dent_ex&quot;, &quot;know_ov&quot;)
+## data_sub &lt;- data_sub %&gt;% select(save_vars)
+## 
+## # Saving to temporary directory
+## #tmpdir &lt;- Sys.getenv(&quot;TEMP&quot;)    #not working
+## tmpdir &lt;- tempdir()
+## saveRDS(object=data_sub, file=file.path(tmpdir, &quot;data_sub.RDS&quot;))
+## 
+## 
+## ```
+## 
+## 
+## # 2. Use new dataset
+## 
+## We start by pulling in the newly created dataset from the tempfile. 
+## 
+## ```{r}
+## 
+## data &lt;- readRDS(file=file.path(tmpdir, &quot;data_sub.RDS&quot;))
+## 
+## 
+## ```
+## 
+## 
+## # 3. Frequency tables
+## 
+## We start by creating a frequency table for each variable in our dataset in order to examine each variable independently. 
+## 
+## ```{r sex_table}
+## 
+## #not sure why the code chunk name doesn't work here. My understanding is that it should allow me to reference this table inline with the text, but it won't show the table number here. 
+## 
+## data %&gt;%
+##   group_by(sex) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Biological sex&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(high_educ_black) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;From sub-sample of highly educated black families&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(home_lang) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Language spoken at home&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(born_us) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Born in the U.S.&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(phys_ex) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Time since last physical exam&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(dent_ex) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Time since last dental exam&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   group_by(know_ov) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Knowledge of women's reproductive health&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## 
+## Next we will look at the frequencies of time since last physical exam and knowledge of women's reproductive health. The question about women's reproductive health is &quot;Most women's periods are regular, that is, they ovulate (are fertile) fourteen days after their periods begin&quot;, and the options include true or false. 
+## 
+## We can see no obvious difference between the respondents who are able to answer this question accurately vs. those that are not in the timing of the last physical exam.
+## 
+## ```{r}
+## 
+## data %&gt;%
+##   filter(know_ov==&quot;(1) True&quot; | know_ov==&quot;(2) False &lt;the correct answer&gt;&quot;) %&gt;%
+##   group_by(know_ov, phys_ex) %&gt;%
+##   summarize(n=n()) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   mutate(`%`=`%` %&gt;% round(1)) %&gt;%
+##   kable(caption=&quot;Knowledge of women's reproductive health&quot;) %&gt;%
+##   kable_styling(full_width=FALSE, position=&quot;left&quot;, 
+##                 bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;))
+## 
+## 
+## ```
+## 
+## 
+## 
+## # 4. Graph
+## 
+## Finally, we will graph the differences in time since last dental exam by language spoken in the home. For this we include those that speak English, Spanish, or other as the three different language groups, and four different groups since last dental exam. 
+## 
+## We can see that those who do not speak English in the home report visiting the dentist in the last year less often than those who do speak English.
+## 
+## ```{r, fig.cap=&quot;Time since last dental exam by language spoken in the home&quot;}
+## 
+## data_plot &lt;- data %&gt;%
+##   filter(!str_detect(dent_ex, regex(&quot;refused|know|applicable&quot;, ignore_case = TRUE))) %&gt;%
+##   group_by(home_lang, dent_ex) %&gt;%
+##   summarize(n=n(), .groups=&quot;drop_last&quot;) %&gt;%
+##   mutate(`%`=n/sum(n)*100) %&gt;%
+##   filter(!str_detect(home_lang, regex(&quot;refused|know&quot;, ignore_case=TRUE))) 
+## 
+## ggplot(data=data_plot, mapping=aes(x=home_lang, y=`%`, fill=dent_ex)) + 
+##   geom_bar(stat=&quot;identity&quot;) + 
+##   coord_flip() +
+##   theme(axis.text.x=element_text(angle=90, vjust=0.5, hjust=1)) +
+##   xlab(&quot;Language spoken in the home&quot;) +
+##   labs(fill=&quot;Time since last dental exam&quot;)
+## 
+## ```
+## 
+## 
+## # Code
+## 
+## 
+## ```{r}
+## 
+## cat(readLines(con=&quot;dcoomes_hw_07.Rmd&quot;), sep='\n')
+## 
+## ```
+## 
+## 
+## ```{r, eval=FALSE}
+## 
+## cat(readLines(con=&quot;https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/dcoomes_hw_07.Rmd&quot;), sep='\n')
 ## 
 ## ```</code></pre>
+<pre class="r"><code>cat(readLines(con=&quot;https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/dcoomes_hw_07.Rmd&quot;), sep='\n')</code></pre>
 </div>
 
 
