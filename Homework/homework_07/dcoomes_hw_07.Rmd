@@ -381,7 +381,7 @@ ggplot(data=data_plot, mapping=aes(x=home_lang, y=`%`, fill=dent_ex)) +
 
 ```{r}
 
-cat(readLines(con="Homework/homework_07/dcoomes_hw_07.Rmd"), sep='\n')
+cat(readLines(con="https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_07/dcoomes_hw_07.Rmd"), sep='\n')
 
 ```
 
