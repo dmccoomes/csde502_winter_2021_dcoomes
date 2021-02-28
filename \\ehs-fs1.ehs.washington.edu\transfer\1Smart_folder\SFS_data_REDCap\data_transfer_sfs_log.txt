@@ -1,0 +1,11 @@
+REDCap Data Import Log: 2021-02-26 16:13:10
+The following (if any) conditions were noted about the data.
+
+
+------------------------------------
+Field Name: `uw_residence_name`
+Indices: 1
+Value(s) must be one of 'alder', 'blakeley', 'cedar', 'com_duch', 'elm', 'hansee', 'lander', 'laurel', 'madrona', 'maple', 'mccarty', 'mcmahon', 'mercer', 'nordheim', 'oak', 'poplar', 'radford', 'stevens', 'terry', 'willow', 'uw_b', 'uw_t', 'dont_know', 'other', 'Alder Hall', 'Blakeley Village', 'Cedar Apartments', 'Commodore Duchess', 'Elm Hall', 'Hansee Hall', 'Lander Hall', 'Laurel Village', 'Madrona Hall', 'Maple Hall', 'McCarty Hall', 'McMahon Hall', 'Mercer Court', 'Nordheim', 'Oak Hall', 'Poplar Hall', 'Radford Court', 'Stevens Court', 'Terry Hall', 'Willow Hall', 'UW Bothell Residence Hall', 'UW Tacoma Residence Hall', 'I don't know', 'Other'.
+Values not imported
+
+
