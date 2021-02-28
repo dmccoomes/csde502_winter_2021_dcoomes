@@ -121,6 +121,13 @@ There are `r dat$multirace[dat$multirace>1] %>% length()` cases that checked mor
 ##
 __Write R code to create the multirace variable, using the data set [AHwave1_v3.rds](http://staff.washington.edu/phurvitz/csde502_winter_2021/data/AHwave1_v3.rds).__ _Hint: You may want to create another variable, numrace, that counts the number of races._ Use [`download_file()`](https://stat.ethz.ch/R-manual/R-devel/library/utils/html/download.file.html) and `Sys.getenv("TEMP")` to download the file to your system's `TEMP` directory to avoid local file system dependencies.
 
+```{r}
+
+
+
+```
+
+
 ## 
 __Label the multirace variable as well as its values using attribute labels.__.
 
