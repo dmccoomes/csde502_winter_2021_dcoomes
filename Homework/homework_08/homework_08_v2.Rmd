@@ -19,9 +19,14 @@ urlcolor: blue
 ---
 
 ```{r, message=FALSE, warning=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+
 library(captioner)
 library(tidyverse)
 library(magrittr)
+library(RCurl)
+library(kableExtra)
 
 figure_nums <- captioner(prefix = "Figure")
 table_nums <- captioner(prefix = "Table")
@@ -123,7 +128,24 @@ __Write R code to create the multirace variable, using the data set [AHwave1_v3.
 
 ```{r}
 
+#downloading data
+tmpdir <- tempdir()
+tmpdir <- paste0(tmpdir, "/AHwave1_v3.rds", sep="")
+download.file("https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_08/data/AHwave1_v3.rds",
+              destfile=tmpdir)
 
+data <- readRDS(tmpdir)
+
+```
+
+
+```{r}
+
+#creating multirace variable
+data <- data %>%
+  mutate_at(vars(hispanic, white, black, AI, asian, raceother), ~ifelse(.==8|.==6, NA, .)) %>%
+  mutate(numrace=rowSums(select(.,hispanic, white, black, AI, asian, raceother))) %>%
+  mutate(multirace=ifelse(numrace>1, 1, 0))
 
 ```
 
@@ -131,8 +153,44 @@ __Write R code to create the multirace variable, using the data set [AHwave1_v3.
 ## 
 __Label the multirace variable as well as its values using attribute labels.__.
 
+```{r}
+
+#adding attributes
+attributes(data$multirace)$label <- "Reported more than one race"
+attributes(data$multirace)$levels <- c("(0) Only one race", "(1) More than one race")
+
+#converting to factor variable
+new_lab <- data$multirace %>%
+  attributes() %>%
+  extract2("levels") 
+
+data$multirace <- factor(data$multirace,
+                         labels=new_lab,
+                         ordered=TRUE) %>%
+  fct_relevel(rev)
+  
+
+```
+
+
 ## 
 __Include below a contingency table of the multirace variable. Make sure that the values are labelled so the table is readable, and also include any missing values.__
+
+```{r}
+
+data %>%
+  group_by(multirace) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  kable(caption="Reported race") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover")) %>%
+                add_footnote("NA = refused or unknown for any race", notation="symbol")
+
+
+```
+
 
 # 
 __Review part B of each of the answers (i.e., `H1KQ1B .. H1KQ10B`) to the Knowledge Quiz (Section 19 of the Add Health questionnaire, documented in `INH19PUB.PDF`). The 10 questions each ask: â€œHow confident are you that your answer is correct?â€__
@@ -140,14 +198,101 @@ __Review part B of each of the answers (i.e., `H1KQ1B .. H1KQ10B`) to the Knowle
 ## 
 __Write R code that creates a single summary variable named `kqconfidence`, with a larger number representing the respondent being more confident across all questions (scale of 0 to 3 for each individual question; `kqconfidence` will be the sum for each subject across the 10 questions). Note that any observations with value 7 (i.e., age less than 15) should be removed from the data frame, and values 6, 8, and 9 should be coded as `NA` (i.e., missing) for the purposes of scoring confidence. Document your code so that the reader knows how you scored the scale and how you handled missing values. Make sure to label the new variable.__
 
+```{r}
+
+data1 <- data %>%
+  #removing those under 15 years (not asked the question)
+  filter(h1kq1b != 7) %>%
+  select(aid, matches("h1kq.*b")) %>%
+  #removing those that refused, didn't know, or not applicable
+  mutate_at(vars(h1kq1b:h1kq10b), ~ifelse(.==6 | .==8 | .==9, NA, .)) %>%
+  #adding up the confidence across all questions (lower number is more confident)
+  #if a respondent is missing data for any answer they will have a missing value for the summary variable
+  mutate(kqconfidence=(rowSums(across(h1kq1b:h1kq10b)))) %>%
+  #keeping only the identifier variable and the summary confidence variable
+  select(aid, kqconfidence)
+
+#Joining the confidence summary variable back with the main data set
+data <- full_join(data, data1, by="aid")
+attributes(data$kqconfidence)$label <- "Confidence about knowledge of pregnancy and birth control (lower is more confident)"
+
+
+```
+
+
 ## 
 __Create and include below a contingency table from `kqconfidence` with raw counts, percentages, and cumulative percentages.__
+
+```{r}
+
+data %>%
+  group_by(kqconfidence) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  mutate("cum %"= round(cumsum(n/sum(n)*100), 1)) %>%
+  kable(caption="Confidence about knowledge of pregnancy and birth control") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover")) %>%
+                add_footnote("Lower number denotes higher confidence", notation="symbol")
+
+```
+
 
 ## 
 __[BONUS] For each subject there were zero to 10 â€œmissingâ€ answers to each of the 10 component questions. We would like to know what this distribution is. Include below a table that shows the count of subjects for each unique value of the count of missing questions.__
 
+```{r, eval=FALSE}
+
+data1 <- data %>%
+  #removing those under 15 years (not asked the question)
+  filter(h1kq1b != 7) %>%
+  select(aid, matches("h1kq.*b")) %>%
+  #removing those that refused, didn't know, or not applicable
+  mutate_at(vars(h1kq1b:h1kq10b), ~ifelse(.==6 | .==8 | .==9, NA, .)) %>%
+  #adding up the confidence across all questions (lower number is more confident)
+  #if a respondent is missing data for any answer they will have a missing value for the summary variable
+  mutate(conf_miss=summarize(across(where(is.na(.)), sum))) %>%
+  #keeping only the identifier variable and the summary confidence variable
+  select(aid, conf_miss)
+
+#Joining the confidence summary variable back with the main data set
+data <- full_join(data, data1, by="aid")
+attributes(data$kqconfidence)$label <- "Confidence about knowledge of pregnancy and birth control (lower is more confident)"
+
+
+```
+
+
 ## 
 __For each possible value of the Knowledge Quiz Part A sum score (from Section \@ref(scoring-across-columns)) what is the mean `kqconfidence` level? __
 
+
+```{r}
+
+data %>%
+  group_by(score) %>%
+  summarize(mean_kqconfidence=mean(kqconfidence, na.rm=TRUE), .groups(.)) %>%
+  kable(caption="Confidence about knowledge of pregnancy and birth control") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover")) %>%
+                add_footnote("Lower number denotes higher confidence", notation="symbol")
+
+```
+
+
+
 ## 
 __[BONUS] For each respondent, create two different confidence scores: a confidence score for the items answered correctly and a confidence score for the items answered incorrectly. How many respondents are more confident when answering incorrectly?__
+
+```{r}
+
+# the correct answers to each question
+correct <- c(2, 1, 2, 2, 2, 2, 2, 1, 2, 2) 
+# make a named vector of the answers using the selected column names
+names(correct) <- str_subset(string = names(data),
+                             pattern = "h1kq.*a")
+```
+
+
+
