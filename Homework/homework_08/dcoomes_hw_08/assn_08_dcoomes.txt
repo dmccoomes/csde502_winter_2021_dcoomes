@@ -1,0 +1,1 @@
+the URL to my Rmd file for assignment 8 on github is: https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_08/homework_08.Rmd
