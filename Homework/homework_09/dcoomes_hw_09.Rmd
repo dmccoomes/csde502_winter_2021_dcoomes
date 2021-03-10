@@ -43,6 +43,40 @@ ___Instructions___:
 #
 __Using the full household roster (you'll need to go back the full raw data source, [21600-0001-Data.dta](http://staff.washington.edu/phurvitz/csde502_winter_2021/data/21600-0001-Data.dta.zip)), create the following variables for each respondent. Document any decisions that you make regarding missing values, definitions, etc. in your narrative as well as in the R code.  Include a frequency tabulation and a histogram of each result.__
 
+Starting by pulling in the full dataset from GitHub and listing the variables.
+
+```{r}
+
+
+
+metadata <- bind_cols(
+    # variable name
+    varname = colnames(data),
+    # label
+    varlabel = lapply(data, function(x) attributes(x)$label) %>% 
+        unlist(),
+    # format
+    varformat = lapply(data, function(x) attributes(x)$format.stata) %>%
+        unlist(),
+    # values
+    varvalues = lapply(data, function(x) attributes(x)$labels) %>% 
+        # names the variable label vector
+        lapply(., function(x) names(x)) %>% 
+        # as character
+        as.character() %>% 
+        # remove the c() construction
+        str_remove_all("^c\\(|\\)$")
+)
+
+DT::datatable(metadata)
+
+```
+
+```{r, results='hide'}
+
+
+```
+
 ##
 __Total number in household__
 
