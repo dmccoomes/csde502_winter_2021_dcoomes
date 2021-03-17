@@ -1,0 +1,36 @@
+---
+title: "CSDE 502 Winter 2021, Assignment 10"
+author: "[dcoomes](mailto:dcoomes@uw.edu)"
+output: 
+    bookdown::html_document2:
+        number_sections: true
+        self_contained: true
+        code_folding: hide
+        toc: true
+        toc_float:
+            collapsed: true
+            smooth_scroll: false
+    pdf_document:
+        number_sections: true
+        toc: true
+        fig_cap: yes
+        keep_tex: yes
+urlcolor: blue 
+---
+
+```{r, message=FALSE, warning=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+
+library(captioner)
+library(tidyverse)
+library(magrittr)
+library(RCurl)
+library(kableExtra)
+
+figure_nums <- captioner(prefix = "Figure")
+table_nums <- captioner(prefix = "Table")
+```
+
+
+

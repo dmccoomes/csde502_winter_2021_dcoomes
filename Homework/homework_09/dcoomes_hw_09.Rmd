@@ -18,8 +18,14 @@ output:
 urlcolor: blue 
 ---
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+
 library(captioner)
+library(tidyverse)
+library(magrittr)
+library(kableExtra)
 
 figure_nums <- captioner(prefix = "Figure")
 table_nums <- captioner(prefix = "Table")
@@ -45,21 +51,21 @@ __Using the full household roster (you'll need to go back the full raw data sour
 
 Starting by pulling in the full dataset from GitHub and listing the variables.
 
-```{r}
+```{r, cache=TRUE, results='hide'}
 
-
+add_helth <- haven::read_dta("https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_09/data/21600-0001-Data.dta")
 
 metadata <- bind_cols(
     # variable name
-    varname = colnames(data),
+    varname = colnames(add_helth),
     # label
-    varlabel = lapply(data, function(x) attributes(x)$label) %>% 
+    varlabel = lapply(add_helth, function(x) attributes(x)$label) %>% 
         unlist(),
     # format
-    varformat = lapply(data, function(x) attributes(x)$format.stata) %>%
+    varformat = lapply(add_helth, function(x) attributes(x)$format.stata) %>%
         unlist(),
     # values
-    varvalues = lapply(data, function(x) attributes(x)$labels) %>% 
+    varvalues = lapply(add_helth, function(x) attributes(x)$labels) %>% 
         # names the variable label vector
         lapply(., function(x) names(x)) %>% 
         # as character
@@ -72,18 +78,63 @@ DT::datatable(metadata)
 
 ```
 
-```{r, results='hide'}
+##
+__Total number in household__
 
+I will use the question "How many people live in household?" to construct the total number in the household. I will not include any observations that reported they don't live in a regular household. As we can see from **`r table_nums(name="numtable", display="cite")`** and **`r figure_nums(name="numhist", display="cite")`** more households have 4 members as compared to other numbers, and the distribution of those that answered is right-skewed.
+
+```{r}
+
+add_helth %<>%
+  mutate(num_house=S27) %>%
+  mutate(num_house=ifelse(num_house==7|num_house==99, NA, num_house))
+
+```
+
+```{r numtable}
+
+add_helth %>%
+  group_by(num_house) %>%
+  summarize(n=n()) %>%
+  mutate(`%`=n/sum(n)*100) %>%
+  mutate(`%`=`%` %>% round(1)) %>%
+  mutate("cum %"= round(cumsum(n/sum(n)*100), 1)) %>%
+  kable(caption="Total number of individuals living in household") %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover")) 
+
+```
+
+```{r numhist, fig.cap="Histogram of the number of people per household"}
+
+bins <- length(unique(add_helth$num_house))-1
+
+ggplot(data=add_helth, mapping=aes(x=num_house)) +
+  geom_histogram(bins=bins, color="red", fill="white") + 
+  theme_bw() + 
+  labs(x="Number of people per household", y="Count")
 
 ```
 
 ##
-__Total number in household__
-
-
-##
 __Number of sisters__
 
+```{r}
+
+add_helth1 <- add_helth %>%
+  #removing those under 15 years (not asked the question)
+  filter(h1kq1b != 7) %>%
+  select(aid, matches("h1kq.*b")) %>%
+  #removing those that refused, didn't know, or not applicable
+  mutate_at(vars(h1kq1b:h1kq10b), ~ifelse(.==6 | .==8 | .==9, NA, .)) %>%
+  #adding up the confidence across all questions (lower number is more confident)
+  #if a respondent is missing data for any answer they will have a missing value for the summary variable
+  mutate(conf_miss=summarize(across(where(is.na(.)), sum))) %>%
+  #keeping only the identifier variable and the summary confidence variable
+  select(aid, conf_miss)
+
+
+```
 
 ##
 __Number of brothers__
