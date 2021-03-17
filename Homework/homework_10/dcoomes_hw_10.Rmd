@@ -55,7 +55,7 @@ spain <- read.table(data_loc, skip=2, header=TRUE)
 
 ```{r}
 
-ggplot
+plot(spain)
 
 ```
 
