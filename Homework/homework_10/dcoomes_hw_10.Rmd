@@ -35,7 +35,32 @@ table_nums <- captioner(prefix = "Table")
 
 ```{r}
 
-spain <- 
+data_loc <- "https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_10/data/spain_Deaths_1x1.txt"
+spain <- read.table(data_loc, skip=2, header=TRUE)
 
 ```
+
+
+# Introduction
+
+
+# Methods
+
+## Data
+
+## Analysis
+
+
+# Results
+
+```{r}
+
+ggplot
+
+```
+
+# Discussion
+
+
+# Conclusion
 
