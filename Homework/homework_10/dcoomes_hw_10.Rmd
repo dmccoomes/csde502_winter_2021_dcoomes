@@ -1,66 +1,198 @@
 ---
 title: "CSDE 502 Winter 2021, Assignment 10"
-author: "[dcoomes](mailto:dcoomes@uw.edu)"
-output: 
-    bookdown::html_document2:
-        number_sections: true
-        self_contained: true
-        code_folding: hide
-        toc: true
-        toc_float:
-            collapsed: true
-            smooth_scroll: false
-    pdf_document:
-        number_sections: true
-        toc: true
-        fig_cap: yes
-        keep_tex: yes
-urlcolor: blue 
+author: '[dcoomes](mailto:dcoomes@uw.edu)'
+output:
+  pdf_document:
+    fig_cap: yes
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
+  bookdown::html_document2:
+    code_folding: hide
+    number_sections: yes
+    self_contained: yes
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+bibliography: /Users/david/Dropbox/1) David/References/CSDE502.bib
+urlcolor: blue
+
 ---
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 
-knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE, fig.pos='H')
 
 library(captioner)
 library(tidyverse)
 library(magrittr)
 library(RCurl)
 library(kableExtra)
+library(reshape2)
+library(cowplot)
 
 figure_nums <- captioner(prefix = "Figure")
 table_nums <- captioner(prefix = "Table")
 ```
 
 
-```{r}
-
-data_loc <- "https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_10/data/spain_Deaths_1x1.txt"
-spain <- read.table(data_loc, skip=2, header=TRUE)
-
-```
-
+<br>
 
 # Introduction
 
+Despite considerable progress since 1990, approximately 5.2 million children under the age of five died worldwide in 2019.[@UNICEF2020] The most dangerous time for children under five is the neonatal period (the first month of life) . The chance of death after the first month and before the first year is slightly higher than the chance of death between 1-5 years of age.[@UNICEF2020]
+
+Spain has one of the lowest under five (u5) mortality rates in Europe. The u5 mortality rate in Spain (2.7 deaths per 1,000 live births) is lower than that of the European Union average (3.5 per 1,000 live births) and much lower than that of the United States (5.7 per 1,000 live births).[@INED] Like many other countries, child mortality in Spain has reduced considerably since the beginning of the 20th century. In this analysis, we will examine mortality among children under five years of age in Spain over the last 108 years, and examine trends among male and female children during this time. 
 
 # Methods
 
 ## Data
 
-## Analysis
-
-
-# Results
+The data used in this analysis is from the *Human Mortality Database* curated by the Max Planck Institute for Demographic Research. This database was designed to provide mortality data for various investigators, including researchers and students. For this analysis we use the mortality dataset from Spain from 1908 - 2018. The dataset we use reports aggregated deaths over five year periods for each five year age group. We limit our analysis to those aged 0-1 years and those aged 1-5 years. This dataset and others are available on the [Human Mortality Database website](https://www.mortality.org)
 
 ```{r}
 
-plot(spain)
+data_loc <- "https://github.com/dmccoomes/csde502_winter_2021_dcoomes/raw/main/Homework/homework_10/data/spain_Deaths_5x5.txt"
+spain <- read.table(data_loc, skip=2, header=TRUE)
 
 ```
 
+
+
+## Analysis
+
+In this analysis we show the total number of deaths among children under five years of age in Spain from 1910 - 2018. We show the total number of deaths for children under 1 year of age and children aged 1-4 separately. We also show the total number of deaths among male and female children separately. 
+
+# Results
+
+As is evident in **`r figure_nums(name="ageall", display="cite")`** the total number of deaths among children under 1 year and children 1-4 years of age has steadily decreased from 1910 to 2018. During this entire time span the total deaths among children under 1 year has been higher than the total deaths among children aged 1-4. The total deaths decreased dramatically between 1920 and 1965 and have been decreasing more slowly since 1965. 
+
+```{r ageall, fig.cap="Total deaths for age 0 and age 1-4 in Spain from 1910-2018", fig.dim=c(6,3)}
+
+options(scipen=999)
+
+# Point plot
+
+# spain %>%
+#   filter(Age=="0" | Age=="1-4") %>%
+#   mutate(Total=Total/1000) %>%
+#   ggplot(aes(x=Year, y=Total)) + 
+#   geom_point(aes(color=Age)) +
+#   theme_bw() +
+#   scale_x_discrete(breaks=levels(spain$Year)[c(T, rep(F, 3))]) +
+#   ylab("Total deaths (1,000s)")
+  
+# Line plot
+spain %>%
+  filter(Age=="0" | Age=="1-4",
+         Year!="1908-1909") %>%
+  mutate(Total=Total/1000) %>%
+  ggplot(aes(x=Year, y=Total)) + 
+  geom_path(aes(color=Age, group=Age)) +
+  theme_bw() +
+  scale_x_discrete(breaks=levels(spain$Year)[c(T, rep(F, 3))]) +
+  ylab("Total deaths (thousands)")
+
+
+```
+
+
+**`r figure_nums(name="sexmort", display="cite")`** shows the difference in total deaths for males and females, also disagregated by age. For both age groups there were more male child deaths as compared to female child deaths. The gap between absolute male deaths and female deaths has decreased as the total number of deaths has decreased, however, **`r table_nums(name="deathtable", display="cite")`** shows that the relative gap has remained similar over time.
+
+
+```{r sexmort, fig.cap="Total deaths for males and females age 0 and age 1-4 in Spain from 1910-2018", fig.dim=c(6,3)}
+
+
+#Transforming from wide to long
+spain2 <- spain %>%
+  filter(Age=="0" | Age=="1-4",
+         Year!="1908-1909") %>%
+  gather(Sex, Deaths, Female:Total, factor_key=TRUE)
+  
+spain2 %>%
+  filter(Sex=="Male" | Sex =="Female") %>%
+  mutate(Deaths=Deaths/1000) %>%
+  ggplot(aes(x=Year, y=Deaths)) + 
+  geom_path(aes(color=Age, group=interaction(Age, Sex), linetype=Sex)) +
+  theme_bw() +
+  scale_x_discrete(breaks=levels(spain$Year)[c(T, rep(F, 3))]) +
+  ylab("Total deaths (thousands)")
+
+```
+
+The relative proportion of child deaths under age one has remained relatively stable from 1908 - 2018. Female deaths have ranged from 42.5% to 45.6% of overall during this time. There does seem to be a small trend in female deaths relative to male decreasing between 1920 to 1980 and then increasing again slightly. The overall proportion of female deaths among children aged 1-4 was similar to those under one year of age. 
+
+```{r deathtable}
+
+spain %>%
+  filter(Age=="0") %>%
+  group_by(Year) %>%
+  mutate(Female=round(Female, 0)) %>%
+  mutate(Male=round(Male, 0)) %>%
+  mutate("Female %"=round((Female/Total)*100, 1)) %>%
+  mutate("Male %"=round((Male/Total)*100, 1)) %>%
+  select(-Age, -Total) %>%
+  kable(caption="Deaths for infants age 0 in Spain by 5-year age span for males and females", 
+        format.args = list(big.mark=",")) %>%
+  kable_styling(full_width=FALSE, position="left", 
+                bootstrap_options = c("striped", "hover")) 
+
+
+```
+
+
+**`r figure_nums(name="recent", display="cite")`A** shows more recent trends in child deaths that cannot be seen when looking at overall deaths from 1910 - 2018. It shows that the reduction in deaths continues for both age groups over the time period of 1985 - 2014. **`r figure_nums(name="recentsex", display="cite")`B** shows a similar trend among males and females.  
+
+
+```{r recent, fig.cap="Total deaths for age 0 and age 1-4 in Spain from 1985-2018", fig.dim=c(6, 4)}
+
+# Generating graph of u5 mortality from 1985-present
+u5 <- spain %>%
+  filter(Age=="0" | Age=="1-4", 
+         Year=="1985-1989" | Year=="1990-1994" | Year=="2000-2004" | Year=="2005-2009" | 
+           Year=="2010-2014") %>%
+  mutate(Total=Total/1000) %>%
+  ggplot(aes(x=Year, y=Total)) + 
+  geom_path(aes(color=Age, group=Age)) +
+  theme_bw() +
+  scale_x_discrete(breaks=levels(spain$Year)[c(T, rep(F, 3))]) +
+  ylab("Total deaths (thousands)") +
+  theme(axis.title.y=element_text(size=7.5))
+
+# Generating graph of u5 mortality from 1985-present by sex
+u5_sex <- spain2 %>%
+  filter(Sex=="Male" | Sex =="Female",
+         Year=="1985-1989" | Year=="1990-1994" | Year=="2000-2004" | Year=="2005-2009" | 
+           Year=="2010-2014") %>%
+  mutate(Deaths=Deaths/1000) %>%
+  ggplot(aes(x=Year, y=Deaths)) + 
+  geom_path(aes(color=Age, group=interaction(Age, Sex), linetype=Sex)) +
+  theme_bw() +
+  scale_x_discrete(breaks=levels(spain$Year)[c(T, rep(F, 3))]) +
+  ylab("Total deaths (thousands)") +
+  theme(axis.title.y=element_text(size=7.5))
+
+plot_grid(u5, u5_sex, labels=c('A', 'B'), ncol=1)
+
+```
+
+
+
 # Discussion
 
+The number of deaths among Spanish children aged below five has steadily decreased over the past 100 years. In this study we use the absolute number of deaths, which does not necessarily show a decrease in the mortality rate. For example, if the birth rate decreased during this time, then we would see a decrease in the number of deaths even if the mortality rate remained constant. Previous studies have shown a reduction in child mortality in Spain over the last 100 years, but also a reduction in the birth rate from 1970 - 2000. Since 2000, the birth rate has remained relatively stable, lending evidence that the reduction in deaths is caused by a reduction in child mortality rates. 
+
+The proportion of deaths among male and female infants has remained relatively stable over the last 100 years in Spain, with male babies accounting for about 55% of all under five deaths. This proportion is similar among those under one year of age and those aged 1-4 years. Previous research has shown that male babies have a biological disadvantage in survival as compared to female babies, however, this disadvantage does not necessarily lead to reduced survival for male babies as there may be other factors, such as cultural preferences for males, that lead to differential distribution of resources for children under five based on sex.[@Byass2012] In the Spanish population over the last 100 years, based on our analysis, male children under five do have a survival disadvantage compared to female children.
 
 # Conclusion
+
+The number of deaths among children under the age of five in Spain has decreased over the last 100 years, however, the proportion of male and female deaths has remained relatively stable. 
+
+\newpage
+
+# References
 
