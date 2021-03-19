@@ -52,7 +52,7 @@ Spain has one of the lowest under five (u5) mortality rates in Europe. The u5 mo
 
 ## Data
 
-The data used in this analysis is from the *Human Mortality Database* curated by the Max Planck Institute for Demographic Research. This database was designed to provide mortality data for various investigators, including researchers and students. For this analysis we use the mortality dataset from Spain from 1908 - 2018. The dataset we use reports aggregated deaths over five year periods for each five year age group. We limit our analysis to those aged 0-1 years and those aged 1-5 years. This dataset and others are available on the [Human Mortality Database website](https://www.mortality.org)
+The data used in this analysis is from the *Human Mortality Database* curated by the Max Planck Institute for Demographic Research. This database was designed to provide mortality data for various investigators, including researchers and students. For this analysis we use the mortality data set from Spain from 1908 - 2018. The data set we use reports aggregated deaths over five year periods for each five year age group. We limit our analysis to those aged 0-1 years and those aged 1-5 years. This data set and others are available on the [Human Mortality Database website](https://www.mortality.org)
 
 ```{r}
 
@@ -101,7 +101,7 @@ spain %>%
 ```
 
 
-**`r figure_nums(name="sexmort", display="cite")`** shows the difference in total deaths for males and females, also disagregated by age. For both age groups there were more male child deaths as compared to female child deaths. The gap between absolute male deaths and female deaths has decreased as the total number of deaths has decreased, however, **`r table_nums(name="deathtable", display="cite")`** shows that the relative gap has remained similar over time.
+**`r figure_nums(name="sexmort", display="cite")`** shows the difference in total deaths for males and females, also disaggregated by age. For both age groups there were more male child deaths as compared to female child deaths. The gap between absolute male deaths and female deaths has decreased as the total number of deaths has decreased, however, **`r table_nums(name="deathtable", display="cite")`** shows that the relative gap has remained similar over time.
 
 
 ```{r sexmort, fig.cap="Total deaths for males and females age 0 and age 1-4 in Spain from 1910-2018", fig.dim=c(6,3)}
